@@ -1,228 +1,164 @@
-((global) => {
-    const formatadorMoeda = new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-    });
+// ==================================================
+// FUNÇÕES DE INTERFACE
+// Este arquivo monta os dados na tela.
+// ==================================================
 
-    function escaparHtml(texto = "") {
-        const mapa = {
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#39;"
-        };
+const AppUI = {
+    // Formata números como moeda brasileira.
+    formatarMoeda(valor) {
+        return Number(valor).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        });
+    },
 
-        return String(texto).replace(/[&<>"']/g, (caractere) => mapa[caractere]);
-    }
+    // Formata o CPF no padrão 000.000.000-00.
+    formatarCPF(cpf) {
+        const numeros = String(cpf).replace(/\D/g, "");
 
-    function formatarMoeda(valor) {
-        return formatadorMoeda.format(Number(valor) || 0);
-    }
-
-    function formatarCPF(cpf = "") {
-        const cpfLimpo = String(cpf).replace(/\D/g, "").slice(0, 11);
-        return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-    }
-
-    function formatarData(data) {
-        if (!data) {
-            return "-";
+        if (numeros.length !== 11) {
+            return cpf;
         }
 
-        const dataConvertida = new Date(data);
-        if (Number.isNaN(dataConvertida.getTime())) {
-            return escaparHtml(data);
-        }
+        return `${numeros.slice(0, 3)}.${numeros.slice(3, 6)}.${numeros.slice(6, 9)}-${numeros.slice(9, 11)}`;
+    },
 
-        return dataConvertida.toLocaleDateString("pt-BR");
-    }
+    // Formata a data para o padrão brasileiro.
+    formatarData(data) {
+        return new Date(data).toLocaleDateString("pt-BR");
+    },
 
-    function obterContainerAlertas() {
-        let container = document.getElementById("app-alertas");
+    // Exibe uma mensagem simples acima do conteúdo.
+    mostrarMensagem(texto, tipo = "success") {
+        const caixa = document.getElementById("mensagem-sistema");
 
-        if (!container) {
-            container = document.createElement("div");
-            container.id = "app-alertas";
-            container.className = "mb-3";
-            const containerPrincipal = document.querySelector(".container");
-            if (containerPrincipal) {
-                containerPrincipal.prepend(container);
-            }
-        }
-
-        return container;
-    }
-
-    function mostrarMensagem(mensagem, tipo = "success", tempoMs = 4000) {
-        const container = obterContainerAlertas();
-        if (!container) {
+        if (!caixa) {
             return;
         }
 
-        const alerta = document.createElement("div");
-        alerta.className = `alert alert-${tipo} alert-dismissible fade show`;
-        alerta.role = "alert";
-        alerta.innerHTML = `
-            <span>${escaparHtml(mensagem)}</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-        `;
+        caixa.innerHTML = `<div class="alert alert-${tipo}">${texto}</div>`;
 
-        container.appendChild(alerta);
+        setTimeout(() => {
+            caixa.innerHTML = "";
+        }, 3000);
+    },
 
-        global.setTimeout(() => {
-            alerta.remove();
-        }, tempoMs);
-    }
+    // Preenche a tabela de clientes.
+    renderClientes(clientes) {
+        const tabela = document.getElementById("tabela-clientes");
 
-    function renderClientes(clientes = []) {
-        const tbody = document.getElementById("tabela-clientes");
-        if (!tbody) {
+        if (clientes.length === 0) {
+            tabela.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum cliente cadastrado.</td></tr>';
             return;
         }
 
-        if (!clientes.length) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Nenhum cliente cadastrado.</td></tr>';
-            return;
-        }
+        let html = "";
 
-        tbody.innerHTML = clientes.map((cliente) => `
-            <tr>
-                <td>${escaparHtml(cliente.nome)}</td>
-                <td>${formatarCPF(cliente.cpf)}</td>
-                <td>${escaparHtml(cliente.email)}</td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-action="editar-cliente" data-id="${cliente.id}">Editar</button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" data-action="excluir-cliente" data-id="${cliente.id}">Excluir</button>
-                </td>
-            </tr>
-        `).join("");
-    }
-
-    function renderContas(contas = [], clientes = []) {
-        const tbody = document.getElementById("tabela-contas");
-        if (!tbody) {
-            return;
-        }
-
-        if (!contas.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Nenhuma conta cadastrada.</td></tr>';
-            return;
-        }
-
-        const mapaClientes = new Map(clientes.map((cliente) => [Number(cliente.id), cliente]));
-
-        tbody.innerHTML = contas.map((conta) => {
-            const cliente = mapaClientes.get(Number(conta.clienteId));
-            const statusClass = conta.status === "Ativa" ? "status-ativa" : "status-encerrada";
-            const textoBotao = conta.status === "Ativa" ? "Encerrar" : "Reativar";
-            const classeBotao = conta.status === "Ativa" ? "btn-outline-danger" : "btn-outline-success";
-
-            return `
+        clientes.forEach(cliente => {
+            html += `
                 <tr>
-                    <td>${escaparHtml(conta.numero)}</td>
-                    <td>${escaparHtml(cliente ? cliente.nome : "Cliente não encontrado")}</td>
-                    <td>${escaparHtml(conta.tipo)}</td>
-                    <td>${formatarMoeda(conta.saldo)}</td>
-                    <td><span class="${statusClass}">${escaparHtml(conta.status)}</span></td>
+                    <td>${cliente.nome}</td>
+                    <td>${this.formatarCPF(cliente.cpf)}</td>
+                    <td>${cliente.email}</td>
                     <td>
-                        <button type="button" class="btn btn-sm ${classeBotao}" data-action="alternar-status-conta" data-id="${conta.id}">${textoBotao}</button>
+                        <button class="btn btn-sm btn-outline-primary" data-action="editar" data-id="${cliente.id}">Editar</button>
+                        <button class="btn btn-sm btn-outline-danger" data-action="excluir" data-id="${cliente.id}">Excluir</button>
                     </td>
                 </tr>
             `;
-        }).join("");
-    }
+        });
 
-    function renderHistorico(transacoes = [], contas = [], clientes = []) {
-        const tbody = document.getElementById("tabela-historico");
-        if (!tbody) {
+        tabela.innerHTML = html;
+    },
+
+    // Preenche a tabela de contas.
+    renderContas(contas, clientes) {
+        const tabela = document.getElementById("tabela-contas");
+
+        if (contas.length === 0) {
+            tabela.innerHTML = '<tr><td colspan="6" class="text-center">Nenhuma conta cadastrada.</td></tr>';
             return;
         }
 
-        if (!transacoes.length) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Nenhuma transação registrada.</td></tr>';
-            return;
-        }
+        let html = "";
 
-        const mapaContas = new Map(contas.map((conta) => [Number(conta.id), conta]));
-        const mapaClientes = new Map(clientes.map((cliente) => [Number(cliente.id), cliente]));
+        contas.forEach(conta => {
+            const cliente = clientes.find(item => item.id === conta.clienteId);
+            const textoBotao = conta.status === "Ativa" ? "Encerrar" : "Reativar";
+            const classeStatus = conta.status === "Ativa" ? "status-ativa" : "status-encerrada";
 
-        tbody.innerHTML = transacoes.map((transacao) => {
-            const conta = mapaContas.get(Number(transacao.contaId));
-            const cliente = conta ? mapaClientes.get(Number(conta.clienteId)) : null;
-            const classeValor = transacao.tipo === "Saque" ? "valor-negativo" : "valor-positivo";
-            const prefixo = transacao.tipo === "Saque" ? "-" : "+";
-            const descricaoConta = conta
-                ? `#${escaparHtml(conta.numero)} - ${escaparHtml(cliente ? cliente.nome : "Cliente")}`
-                : `Conta #${escaparHtml(transacao.contaId)}`;
-
-            return `
+            html += `
                 <tr>
-                    <td>${formatarData(transacao.data)}</td>
-                    <td>${descricaoConta}</td>
-                    <td>${escaparHtml(transacao.tipo)}</td>
-                    <td class="${classeValor}">${prefixo} ${formatarMoeda(transacao.valor)}</td>
-                    <td>${formatarMoeda(transacao.novoSaldo)}</td>
+                    <td>${conta.numero}</td>
+                    <td>${cliente ? cliente.nome : "Não encontrado"}</td>
+                    <td>${conta.tipo}</td>
+                    <td>${this.formatarMoeda(conta.saldo)}</td>
+                    <td><span class="${classeStatus}">${conta.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary" data-action="status-conta" data-id="${conta.id}">${textoBotao}</button>
+                    </td>
                 </tr>
             `;
-        }).join("");
-    }
+        });
 
-    function preencherSelectClientes(clientes = []) {
+        tabela.innerHTML = html;
+    },
+
+    // Preenche a tabela do histórico de transações.
+    renderHistorico(transacoes, contas, clientes) {
+        const tabela = document.getElementById("tabela-historico");
+
+        if (transacoes.length === 0) {
+            tabela.innerHTML = '<tr><td colspan="5" class="text-center">Nenhuma transação registrada.</td></tr>';
+            return;
+        }
+
+        let html = "";
+        const listaInvertida = [...transacoes].reverse();
+
+        listaInvertida.forEach(transacao => {
+            const conta = contas.find(item => item.id === transacao.contaId);
+            const cliente = conta ? clientes.find(item => item.id === conta.clienteId) : null;
+            const classeValor = transacao.tipo === "Depósito" ? "valor-entrada" : "valor-saida";
+
+            html += `
+                <tr>
+                    <td>${this.formatarData(transacao.data)}</td>
+                    <td>${conta ? conta.numero : "-"} - ${cliente ? cliente.nome : "Cliente"}</td>
+                    <td>${transacao.tipo}</td>
+                    <td class="${classeValor}">${this.formatarMoeda(transacao.valor)}</td>
+                    <td>${this.formatarMoeda(transacao.novoSaldo)}</td>
+                </tr>
+            `;
+        });
+
+        tabela.innerHTML = html;
+    },
+
+    // Atualiza o select de clientes na aba de contas.
+    preencherSelectClientes(clientes) {
         const select = document.getElementById("sel-cliente");
-        if (!select) {
-            return;
-        }
+        let html = '<option value="">Selecione o cliente...</option>';
 
-        const valorAtual = select.value;
-        select.innerHTML = `
-            <option value="">Selecione o Cliente...</option>
-            ${clientes.map((cliente) => `<option value="${cliente.id}">${escaparHtml(cliente.nome)} - CPF ${formatarCPF(cliente.cpf)}</option>`).join("")}
-        `;
+        clientes.forEach(cliente => {
+            html += `<option value="${cliente.id}">${cliente.nome}</option>`;
+        });
 
-        if ([...select.options].some((opcao) => opcao.value === valorAtual)) {
-            select.value = valorAtual;
-        }
-    }
+        select.innerHTML = html;
+    },
 
-    function preencherSelectContas(contas = [], clientes = []) {
+    // Atualiza o select de contas na aba de transações.
+    preencherSelectContas(contas, clientes) {
         const select = document.getElementById("sel-conta-transacao");
-        if (!select) {
-            return;
-        }
+        let html = '<option value="">Selecione a conta...</option>';
 
-        const valorAtual = select.value;
-        const mapaClientes = new Map(clientes.map((cliente) => [Number(cliente.id), cliente]));
-        const contasAtivas = contas.filter((conta) => conta.status === "Ativa");
+        contas.forEach(conta => {
+            if (conta.status === "Ativa") {
+                const cliente = clientes.find(item => item.id === conta.clienteId);
+                html += `<option value="${conta.id}">Conta ${conta.numero} - ${cliente ? cliente.nome : "Cliente"}</option>`;
+            }
+        });
 
-        if (!contasAtivas.length) {
-            select.innerHTML = '<option value="">Nenhuma conta ativa disponível</option>';
-            return;
-        }
-
-        select.innerHTML = `
-            <option value="">Selecione a conta...</option>
-            ${contasAtivas.map((conta) => {
-                const cliente = mapaClientes.get(Number(conta.clienteId));
-                const nomeCliente = cliente ? cliente.nome : "Cliente";
-                return `<option value="${conta.id}">Conta ${conta.numero} - ${escaparHtml(nomeCliente)} (${escaparHtml(conta.tipo)})</option>`;
-            }).join("")}
-        `;
-
-        if ([...select.options].some((opcao) => opcao.value === valorAtual)) {
-            select.value = valorAtual;
-        }
+        select.innerHTML = html;
     }
-
-    global.AppUI = {
-        formatarMoeda,
-        formatarCPF,
-        formatarData,
-        mostrarMensagem,
-        renderClientes,
-        renderContas,
-        renderHistorico,
-        preencherSelectClientes,
-        preencherSelectContas
-    };
-})(typeof window !== "undefined" ? window : globalThis);
+};
