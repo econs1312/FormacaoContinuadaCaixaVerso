@@ -1,0 +1,10 @@
+{
+  "name": "rpg-poo",
+  "version": "1.0.0",
+  "description": "Sistema simplificado de RPG aplicando Herança, Encapsulamento e Polimorfismo",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  }
+}
