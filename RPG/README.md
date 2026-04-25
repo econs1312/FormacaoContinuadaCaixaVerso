@@ -2,7 +2,7 @@
 Continuação das aulas com a AdaTech no programa CaixaVerso
 
 
-Primeira entrega de projeto módulo JS DOM.
+Segunda entrega de projeto módulo POO.
 
 
 Grupo composto por:
