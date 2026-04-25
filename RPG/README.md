@@ -2,7 +2,7 @@
 Continuação das aulas com a AdaTech no programa CaixaVerso
 
 
-Segunda entrega de projeto módulo POO.
+Segunda entrega de projeto, agora no segundo módulo POO.
 
 
 Grupo composto por:
