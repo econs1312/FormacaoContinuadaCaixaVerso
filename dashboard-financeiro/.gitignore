@@ -42,3 +42,7 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Documento de Explicação Local (Não enviar ao GitHub)
+EXPLICACAO_PROJETO.md
+
