@@ -134,18 +134,18 @@ import { Registro, TipoRegistro, CATEGORIAS_POR_TIPO } from '../../models/regist
         flex-wrap: wrap;
       }
       .tipo-btn {
-        flex: 1;
-        min-width: 100px;
+        flex: 1 1 auto;
+        min-width: 90px;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.375rem;
-        padding: 0.625rem 0.75rem;
+        padding: 0.625rem 0.5rem;
         border-radius: 10px;
         border: 1px solid rgba(255,255,255,0.1);
         background: rgba(255,255,255,0.04);
         color: rgba(255,255,255,0.5);
-        font-size: 0.875rem;
+        font-size: 0.8125rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
