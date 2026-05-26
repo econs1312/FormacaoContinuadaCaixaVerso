@@ -161,10 +161,11 @@ import { Registro, TipoRegistro, CATEGORIAS_POR_TIPO } from '../../models/regist
         gap: 0.875rem;
         margin-bottom: 1rem;
       }
-      .field { display: flex; flex-direction: column; gap: 0.375rem; }
+      .field { display: flex; flex-direction: column; gap: 0.375rem; min-width: 0; }
       .full { grid-column: 1 / -1; }
       .field-label { font-size: 0.8125rem; font-weight: 500; color: rgba(255,255,255,0.5); }
       .field-input {
+        width: 100%;
         padding: 0.625rem 0.875rem;
         background: rgba(255,255,255,0.06);
         border: 1px solid rgba(255,255,255,0.1);
